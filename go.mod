@@ -2,6 +2,8 @@ module github.com/andre/plantdoc
 
 go 1.22.0
 
+toolchain go1.22.10
+
 require (
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgx/v5 v5.7.2
