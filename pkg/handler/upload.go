@@ -18,7 +18,12 @@ import (
 )
 
 func (h *Handler) UploadForm(w http.ResponseWriter, r *http.Request) {
-	plants, _ := h.plants.List(r.Context())
+	activeProfile, profiles, ok := h.resolveActiveProfile(w, r)
+	if !ok {
+		return
+	}
+
+	plants, _ := h.plants.ListByProfile(r.Context(), activeProfile.ID)
 
 	var cards []PlantCard
 	for _, p := range plants {
@@ -32,24 +37,32 @@ func (h *Handler) UploadForm(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.renderPage(w, "upload.html", map[string]any{
-		"Plants": cards,
+		"Plants":         cards,
+		"CurrentProfile": activeProfile,
+		"Profiles":       profiles,
+		"CurrentPath":    r.URL.RequestURI(),
 	})
 }
 
 func (h *Handler) PlantUploadForm(w http.ResponseWriter, r *http.Request) {
+	activeProfile, profiles, ok := h.resolveActiveProfile(w, r)
+	if !ok {
+		return
+	}
+
 	id, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
 		http.NotFound(w, r)
 		return
 	}
 
-	plant, err := h.plants.GetByID(r.Context(), id)
+	plant, err := h.plants.GetByIDForProfile(r.Context(), id, activeProfile.ID)
 	if err != nil {
 		http.NotFound(w, r)
 		return
 	}
 
-	plants, _ := h.plants.List(r.Context())
+	plants, _ := h.plants.ListByProfile(r.Context(), activeProfile.ID)
 	var cards []PlantCard
 	for _, p := range plants {
 		card := PlantCard{Plant: p}
@@ -62,12 +75,20 @@ func (h *Handler) PlantUploadForm(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.renderPage(w, "upload.html", map[string]any{
-		"Plants":        cards,
-		"SelectedPlant": plant,
+		"Plants":         cards,
+		"SelectedPlant":  plant,
+		"CurrentProfile": activeProfile,
+		"Profiles":       profiles,
+		"CurrentPath":    r.URL.RequestURI(),
 	})
 }
 
 func (h *Handler) UploadPhoto(w http.ResponseWriter, r *http.Request) {
+	activeProfile, _, ok := h.resolveActiveProfile(w, r)
+	if !ok {
+		return
+	}
+
 	if err := r.ParseMultipartForm(10 << 20); err != nil {
 		writeErrorCard(w, "File too large (max 10MB).")
 		return
@@ -109,7 +130,7 @@ func (h *Handler) UploadPhoto(w http.ResponseWriter, r *http.Request) {
 	scanMode := normalizeScanMode(r.FormValue("scan_mode"))
 
 	if scanMode == "bulk" {
-		h.handleBulkScan(w, r, imgData, mimeType, filename)
+		h.handleBulkScan(w, r, activeProfile.ID, imgData, mimeType, filename)
 		return
 	}
 
@@ -119,6 +140,10 @@ func (h *Handler) UploadPhoto(w http.ResponseWriter, r *http.Request) {
 	name := strings.TrimSpace(r.FormValue("name"))
 	if plantIDStr != "" {
 		if pid, err := strconv.Atoi(plantIDStr); err == nil {
+			if _, err := h.plants.GetByIDForProfile(r.Context(), pid, activeProfile.ID); err != nil {
+				writeErrorCard(w, "That plant is not available in the active profile.")
+				return
+			}
 			if prev, err := h.assess.GetLatestByPlant(r.Context(), pid); err == nil {
 				previousDiag = &prev.Diagnosis
 			}
@@ -133,7 +158,7 @@ func (h *Handler) UploadPhoto(w http.ResponseWriter, r *http.Request) {
 	}
 	normalizeAnalysisResult(result)
 
-	plantID, err := h.savePlantResult(r, plantIDStr, name, result, filename, imgData, mimeType)
+	plantID, err := h.savePlantResult(r, activeProfile.ID, plantIDStr, name, result, filename, imgData, mimeType)
 	if err != nil {
 		log.Printf("saving result: %v", err)
 		writeErrorCard(w, "We analyzed the image but could not save the result. Please try again.")
@@ -143,7 +168,7 @@ func (h *Handler) UploadPhoto(w http.ResponseWriter, r *http.Request) {
 	h.renderResultCard(w, result, plantID)
 }
 
-func (h *Handler) handleBulkScan(w http.ResponseWriter, r *http.Request, imgData []byte, mimeType, filename string) {
+func (h *Handler) handleBulkScan(w http.ResponseWriter, r *http.Request, profileID int, imgData []byte, mimeType, filename string) {
 	bulk, err := h.gemini.AnalyzeBulk(r.Context(), imgData, mimeType)
 	if err != nil {
 		log.Printf("Gemini bulk analysis: %v", err)
@@ -165,7 +190,7 @@ func (h *Handler) handleBulkScan(w http.ResponseWriter, r *http.Request, imgData
 	savedCount := 0
 	for i, result := range bulk.Plants {
 		normalizeAnalysisResult(&result)
-		plantID, err := h.savePlantResult(r, "", "", &result, fmt.Sprintf("%d-%s", i, filename), imgData, mimeType)
+		plantID, err := h.savePlantResult(r, profileID, "", "", &result, fmt.Sprintf("%d-%s", i, filename), imgData, mimeType)
 		if err != nil {
 			log.Printf("saving bulk plant %d: %v", i, err)
 			continue
@@ -183,7 +208,7 @@ func (h *Handler) handleBulkScan(w http.ResponseWriter, r *http.Request, imgData
 	fmt.Fprintf(w, `</div>`)
 }
 
-func (h *Handler) savePlantResult(r *http.Request, plantIDStr string, explicitName string, result *gemini.AnalysisResult, filename string, imgData []byte, mimeType string) (int, error) {
+func (h *Handler) savePlantResult(r *http.Request, profileID int, plantIDStr string, explicitName string, result *gemini.AnalysisResult, filename string, imgData []byte, mimeType string) (int, error) {
 	if result == nil {
 		return 0, fmt.Errorf("analysis result is nil")
 	}
@@ -195,7 +220,7 @@ func (h *Handler) savePlantResult(r *http.Request, plantIDStr string, explicitNa
 		if err != nil || parsedID <= 0 {
 			return 0, fmt.Errorf("invalid plant id %q", plantIDStr)
 		}
-		if _, err := h.plants.GetByID(r.Context(), parsedID); err != nil {
+		if _, err := h.plants.GetByIDForProfile(r.Context(), parsedID, profileID); err != nil {
 			return 0, fmt.Errorf("plant %d not found: %w", parsedID, err)
 		}
 		plantID = parsedID
@@ -217,7 +242,7 @@ func (h *Handler) savePlantResult(r *http.Request, plantIDStr string, explicitNa
 			commonName = name
 		}
 
-		plant, err := h.plants.Create(r.Context(), name, species, commonName)
+		plant, err := h.plants.Create(r.Context(), profileID, name, species, commonName)
 		if err != nil {
 			return 0, fmt.Errorf("creating plant: %w", err)
 		}

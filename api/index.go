@@ -42,10 +42,11 @@ func setup() {
 	}
 
 	plantRepo := repository.NewPlantRepo(db)
+	profileRepo := repository.NewProfileRepo(db)
 	assessRepo := repository.NewAssessmentRepo(db)
 	geminiClient := gemini.NewClient(geminiKey)
 
-	h := apphandler.New(plantRepo, assessRepo, geminiClient, templates.FS(), "/tmp/uploads")
+	h := apphandler.New(plantRepo, profileRepo, assessRepo, geminiClient, templates.FS(), "/tmp/uploads")
 
 	mux = http.NewServeMux()
 	h.Routes(mux)

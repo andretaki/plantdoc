@@ -13,15 +13,17 @@ import (
 
 type Handler struct {
 	plants    *repository.PlantRepo
+	profiles  *repository.ProfileRepo
 	assess    *repository.AssessmentRepo
 	gemini    *gemini.Client
 	tmplFS    fs.FS
 	uploadDir string
 }
 
-func New(plants *repository.PlantRepo, assess *repository.AssessmentRepo, gem *gemini.Client, tmplFS fs.FS, uploadDir string) *Handler {
+func New(plants *repository.PlantRepo, profiles *repository.ProfileRepo, assess *repository.AssessmentRepo, gem *gemini.Client, tmplFS fs.FS, uploadDir string) *Handler {
 	return &Handler{
 		plants:    plants,
+		profiles:  profiles,
 		assess:    assess,
 		gemini:    gem,
 		tmplFS:    tmplFS,
@@ -59,6 +61,8 @@ func (h *Handler) Routes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /{$}", h.Dashboard)
 	mux.HandleFunc("GET /upload", h.UploadForm)
 	mux.HandleFunc("POST /upload", h.UploadPhoto)
+	mux.HandleFunc("POST /profiles", h.CreateProfile)
+	mux.HandleFunc("POST /profiles/select", h.SelectProfile)
 	mux.HandleFunc("GET /plants/{id}", h.PlantDetail)
 	mux.HandleFunc("GET /plants/{id}/upload", h.PlantUploadForm)
 	mux.HandleFunc("GET /photos/{id}", h.ServePhoto)
@@ -74,13 +78,18 @@ func (h *Handler) Routes(mux *http.ServeMux) {
 }
 
 func (h *Handler) ServePhoto(w http.ResponseWriter, r *http.Request) {
+	activeProfile, _, ok := h.resolveActiveProfile(w, r)
+	if !ok {
+		return
+	}
+
 	id, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
 		http.NotFound(w, r)
 		return
 	}
 
-	data, mime, err := h.assess.GetPhotoData(r.Context(), id)
+	data, mime, err := h.assess.GetPhotoDataByProfile(r.Context(), id, activeProfile.ID)
 	if err != nil || len(data) == 0 {
 		http.NotFound(w, r)
 		return

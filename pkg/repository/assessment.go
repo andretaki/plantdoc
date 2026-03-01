@@ -90,3 +90,19 @@ func (r *AssessmentRepo) GetPhotoData(ctx context.Context, id int) ([]byte, stri
 	}
 	return data, mime, nil
 }
+
+func (r *AssessmentRepo) GetPhotoDataByProfile(ctx context.Context, assessmentID, profileID int) ([]byte, string, error) {
+	var data []byte
+	var mime string
+	err := r.db.Pool.QueryRow(ctx,
+		`SELECT a.photo_data, a.photo_mime
+		 FROM assessments a
+		 JOIN plants p ON p.id = a.plant_id
+		 WHERE a.id = $1 AND p.profile_id = $2`,
+		assessmentID, profileID,
+	).Scan(&data, &mime)
+	if err != nil {
+		return nil, "", fmt.Errorf("getting photo data for assessment %d in profile %d: %w", assessmentID, profileID, err)
+	}
+	return data, mime, nil
+}

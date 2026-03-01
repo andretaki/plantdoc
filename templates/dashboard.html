@@ -1,7 +1,7 @@
 {{define "title"}}Dashboard{{end}}
 {{define "content"}}
 <div class="page-header fade-in">
-    <h1>Your Collection</h1>
+    <h1>{{if .CurrentProfile}}{{.CurrentProfile.Name}}'s Collection{{else}}Your Collection{{end}}</h1>
     {{with .Plants}}
     <p class="subtitle">{{len .}} specimen{{if ne (len .) 1}}s{{end}} under observation</p>
     {{end}}

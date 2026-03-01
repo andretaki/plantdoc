@@ -51,10 +51,11 @@ func main() {
 	log.Println("Database migrated successfully")
 
 	plantRepo := repository.NewPlantRepo(db)
+	profileRepo := repository.NewProfileRepo(db)
 	assessRepo := repository.NewAssessmentRepo(db)
 	geminiClient := gemini.NewClient(geminiKey)
 
-	h := handler.New(plantRepo, assessRepo, geminiClient, templates.FS(), uploadDir)
+	h := handler.New(plantRepo, profileRepo, assessRepo, geminiClient, templates.FS(), uploadDir)
 
 	mux := http.NewServeMux()
 	h.Routes(mux)

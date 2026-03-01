@@ -20,7 +20,31 @@
                 </svg>
                 PlantDoc
             </a>
-            <a href="/upload" class="nav-btn">+ New Scan</a>
+            <div class="nav-actions">
+                {{if .CurrentProfile}}
+                <span class="nav-profile-pill">{{.CurrentProfile.Name}}</span>
+                {{end}}
+
+                {{if .Profiles}}
+                <form method="post" action="/profiles/select" class="nav-profile-switch">
+                    <input type="hidden" name="return_to" value="{{.CurrentPath}}">
+                    <label for="profile_id" class="sr-only">Active profile</label>
+                    <select id="profile_id" name="profile_id" onchange="this.form.submit()">
+                        {{range .Profiles}}
+                        <option value="{{.ID}}"{{if $.CurrentProfile}}{{if eq .ID $.CurrentProfile.ID}} selected{{end}}{{end}}>{{.Name}}</option>
+                        {{end}}
+                    </select>
+                </form>
+
+                <form method="post" action="/profiles" class="nav-profile-create">
+                    <input type="hidden" name="return_to" value="{{.CurrentPath}}">
+                    <input type="text" name="name" placeholder="Add person" maxlength="80" required>
+                    <button type="submit">+ Person</button>
+                </form>
+                {{end}}
+
+                <a href="/upload" class="nav-btn">+ New Scan</a>
+            </div>
         </div>
     </nav>
     <main class="main">

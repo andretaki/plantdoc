@@ -8,14 +8,19 @@ import (
 )
 
 type PlantCard struct {
-	Plant           model.Plant
-	LatestPhoto     string
-	LatestPhotoID   int
-	HealthScore     int
+	Plant         model.Plant
+	LatestPhoto   string
+	LatestPhotoID int
+	HealthScore   int
 }
 
 func (h *Handler) Dashboard(w http.ResponseWriter, r *http.Request) {
-	plants, err := h.plants.List(r.Context())
+	activeProfile, profiles, ok := h.resolveActiveProfile(w, r)
+	if !ok {
+		return
+	}
+
+	plants, err := h.plants.ListByProfile(r.Context(), activeProfile.ID)
 	if err != nil {
 		log.Printf("listing plants: %v", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -34,6 +39,9 @@ func (h *Handler) Dashboard(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.renderPage(w, "dashboard.html", map[string]any{
-		"Plants": cards,
+		"Plants":         cards,
+		"CurrentProfile": activeProfile,
+		"Profiles":       profiles,
+		"CurrentPath":    r.URL.RequestURI(),
 	})
 }

@@ -4,10 +4,17 @@ import "time"
 
 type Plant struct {
 	ID         int
+	ProfileID  int
 	Name       string
 	Species    string
 	CommonName string
 	CreatedAt  time.Time
+}
+
+type Profile struct {
+	ID        int
+	Name      string
+	CreatedAt time.Time
 }
 
 type Assessment struct {

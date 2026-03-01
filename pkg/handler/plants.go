@@ -7,13 +7,18 @@ import (
 )
 
 func (h *Handler) PlantDetail(w http.ResponseWriter, r *http.Request) {
+	activeProfile, profiles, ok := h.resolveActiveProfile(w, r)
+	if !ok {
+		return
+	}
+
 	id, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
 		http.NotFound(w, r)
 		return
 	}
 
-	plant, err := h.plants.GetByID(r.Context(), id)
+	plant, err := h.plants.GetByIDForProfile(r.Context(), id, activeProfile.ID)
 	if err != nil {
 		http.NotFound(w, r)
 		return
@@ -25,7 +30,10 @@ func (h *Handler) PlantDetail(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.renderPage(w, "plant.html", map[string]any{
-		"Plant":       plant,
-		"Assessments": assessments,
+		"Plant":          plant,
+		"Assessments":    assessments,
+		"CurrentProfile": activeProfile,
+		"Profiles":       profiles,
+		"CurrentPath":    r.URL.RequestURI(),
 	})
 }
