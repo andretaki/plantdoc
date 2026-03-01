@@ -15,14 +15,34 @@
                     <span class="assessment-score score-low">{{.HealthScore}}/10</span>
                     {{end}}
                 </div>
+                {{if .Foliage}}
+                <div class="assessment-subscores">
+                    <div class="subscore-mini"><span class="subscore-mini-label">Foliage</span><span class="subscore-mini-val">{{.Foliage}}</span></div>
+                    <div class="subscore-mini"><span class="subscore-mini-label">Hydration</span><span class="subscore-mini-val">{{.Hydration}}</span></div>
+                    <div class="subscore-mini"><span class="subscore-mini-label">Pest</span><span class="subscore-mini-val">{{.PestRisk}}</span></div>
+                    <div class="subscore-mini"><span class="subscore-mini-label">Vitality</span><span class="subscore-mini-val">{{.Vitality}}</span></div>
+                </div>
+                {{end}}
+                {{if .Urgent}}
+                <div class="assessment-urgent">
+                    <div class="assessment-section-title" style="color: var(--health-low);">Urgent</div>
+                    <p>{{.Urgent}}</p>
+                </div>
+                {{end}}
                 <div class="assessment-section">
                     <div class="assessment-section-title">Diagnosis</div>
                     <p>{{.Diagnosis}}</p>
                 </div>
                 <div class="assessment-section">
-                    <div class="assessment-section-title">Care Notes</div>
+                    <div class="assessment-section-title">Care Plan</div>
                     <p>{{.CareTips}}</p>
                 </div>
+                {{if .SeasonalAdvice}}
+                <div class="assessment-section">
+                    <div class="assessment-section-title">Seasonal</div>
+                    <p>{{.SeasonalAdvice}}</p>
+                </div>
+                {{end}}
             </div>
         </div>
     </div>

@@ -11,13 +11,20 @@ type Plant struct {
 }
 
 type Assessment struct {
-	ID          int
-	PlantID     int
-	PhotoPath   string
-	PhotoData   []byte
-	PhotoMime   string
-	HealthScore int
-	Diagnosis   string
-	CareTips    string
-	CreatedAt   time.Time
+	ID             int
+	PlantID        int
+	PhotoPath      string
+	PhotoData      []byte
+	PhotoMime      string
+	HealthScore    int
+	Confidence     string
+	Diagnosis      string
+	CareTips       string
+	Foliage        int
+	Hydration      int
+	PestRisk       int
+	Vitality       int
+	Urgent         string
+	SeasonalAdvice string
+	CreatedAt      time.Time
 }

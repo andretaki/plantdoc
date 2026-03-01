@@ -16,23 +16,31 @@ func NewAssessmentRepo(db *database.DB) *AssessmentRepo {
 	return &AssessmentRepo{db: db}
 }
 
-func (r *AssessmentRepo) Create(ctx context.Context, plantID int, photoPath string, photoData []byte, photoMime string, healthScore int, diagnosis, careTips string) (*model.Assessment, error) {
-	var a model.Assessment
+func (r *AssessmentRepo) Create(ctx context.Context, plantID int, photoPath string, photoData []byte, photoMime string, a *model.Assessment) (*model.Assessment, error) {
+	var out model.Assessment
 	err := r.db.Pool.QueryRow(ctx,
-		`INSERT INTO assessments (plant_id, photo_path, photo_data, photo_mime, health_score, diagnosis, care_tips)
-		 VALUES ($1, $2, $3, $4, $5, $6, $7)
-		 RETURNING id, plant_id, photo_path, health_score, diagnosis, care_tips, created_at`,
-		plantID, photoPath, photoData, photoMime, healthScore, diagnosis, careTips,
-	).Scan(&a.ID, &a.PlantID, &a.PhotoPath, &a.HealthScore, &a.Diagnosis, &a.CareTips, &a.CreatedAt)
+		`INSERT INTO assessments (plant_id, photo_path, photo_data, photo_mime, health_score, confidence, diagnosis, care_tips, foliage, hydration, pest_risk, vitality, urgent, seasonal_advice)
+		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+		 RETURNING id, plant_id, photo_path, health_score, confidence, diagnosis, care_tips, foliage, hydration, pest_risk, vitality, urgent, seasonal_advice, created_at`,
+		plantID, photoPath, photoData, photoMime,
+		a.HealthScore, a.Confidence, a.Diagnosis, a.CareTips,
+		a.Foliage, a.Hydration, a.PestRisk, a.Vitality,
+		a.Urgent, a.SeasonalAdvice,
+	).Scan(&out.ID, &out.PlantID, &out.PhotoPath, &out.HealthScore, &out.Confidence,
+		&out.Diagnosis, &out.CareTips, &out.Foliage, &out.Hydration, &out.PestRisk,
+		&out.Vitality, &out.Urgent, &out.SeasonalAdvice, &out.CreatedAt)
 	if err != nil {
 		return nil, fmt.Errorf("creating assessment: %w", err)
 	}
-	return &a, nil
+	return &out, nil
 }
 
 func (r *AssessmentRepo) ListByPlant(ctx context.Context, plantID int) ([]model.Assessment, error) {
 	rows, err := r.db.Pool.Query(ctx,
-		`SELECT id, plant_id, photo_path, health_score, diagnosis, care_tips, created_at
+		`SELECT id, plant_id, photo_path, health_score,
+		        COALESCE(confidence, ''), COALESCE(diagnosis, ''), COALESCE(care_tips, ''),
+		        COALESCE(foliage, 0), COALESCE(hydration, 0), COALESCE(pest_risk, 0), COALESCE(vitality, 0),
+		        COALESCE(urgent, ''), COALESCE(seasonal_advice, ''), created_at
 		 FROM assessments WHERE plant_id = $1 ORDER BY created_at DESC`, plantID)
 	if err != nil {
 		return nil, fmt.Errorf("listing assessments: %w", err)
@@ -42,7 +50,10 @@ func (r *AssessmentRepo) ListByPlant(ctx context.Context, plantID int) ([]model.
 	var assessments []model.Assessment
 	for rows.Next() {
 		var a model.Assessment
-		if err := rows.Scan(&a.ID, &a.PlantID, &a.PhotoPath, &a.HealthScore, &a.Diagnosis, &a.CareTips, &a.CreatedAt); err != nil {
+		if err := rows.Scan(&a.ID, &a.PlantID, &a.PhotoPath, &a.HealthScore,
+			&a.Confidence, &a.Diagnosis, &a.CareTips,
+			&a.Foliage, &a.Hydration, &a.PestRisk, &a.Vitality,
+			&a.Urgent, &a.SeasonalAdvice, &a.CreatedAt); err != nil {
 			return nil, fmt.Errorf("scanning assessment: %w", err)
 		}
 		assessments = append(assessments, a)
@@ -53,9 +64,15 @@ func (r *AssessmentRepo) ListByPlant(ctx context.Context, plantID int) ([]model.
 func (r *AssessmentRepo) GetLatestByPlant(ctx context.Context, plantID int) (*model.Assessment, error) {
 	var a model.Assessment
 	err := r.db.Pool.QueryRow(ctx,
-		`SELECT id, plant_id, photo_path, health_score, diagnosis, care_tips, created_at
+		`SELECT id, plant_id, photo_path, health_score,
+		        COALESCE(confidence, ''), COALESCE(diagnosis, ''), COALESCE(care_tips, ''),
+		        COALESCE(foliage, 0), COALESCE(hydration, 0), COALESCE(pest_risk, 0), COALESCE(vitality, 0),
+		        COALESCE(urgent, ''), COALESCE(seasonal_advice, ''), created_at
 		 FROM assessments WHERE plant_id = $1 ORDER BY created_at DESC LIMIT 1`, plantID,
-	).Scan(&a.ID, &a.PlantID, &a.PhotoPath, &a.HealthScore, &a.Diagnosis, &a.CareTips, &a.CreatedAt)
+	).Scan(&a.ID, &a.PlantID, &a.PhotoPath, &a.HealthScore,
+		&a.Confidence, &a.Diagnosis, &a.CareTips,
+		&a.Foliage, &a.Hydration, &a.PestRisk, &a.Vitality,
+		&a.Urgent, &a.SeasonalAdvice, &a.CreatedAt)
 	if err != nil {
 		return nil, fmt.Errorf("getting latest assessment for plant %d: %w", plantID, err)
 	}

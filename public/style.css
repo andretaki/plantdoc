@@ -561,6 +561,173 @@ h1, h2, h3, .font-display {
 
 .result-action { margin-top: 1.5rem; }
 
+/* Sub-scores */
+.result-subscores {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid rgba(44, 36, 22, 0.08);
+}
+
+.subscore {
+  text-align: center;
+  padding: 0.6rem 0.25rem;
+  background: var(--parchment);
+  border-radius: 2px;
+}
+
+.subscore-label {
+  display: block;
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-bottom: 0.2rem;
+}
+
+.subscore-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--forest);
+}
+
+/* Confidence badge */
+.result-confidence {
+  font-family: 'DM Sans', sans-serif;
+  font-style: normal;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.15rem 0.5rem;
+  border-radius: 2px;
+  margin-left: 0.5rem;
+}
+
+.confidence-high { color: var(--health-high); background: rgba(96, 108, 56, 0.1); }
+.confidence-medium { color: #92400E; background: rgba(221, 161, 94, 0.1); }
+.confidence-low { color: var(--health-low); background: rgba(193, 18, 31, 0.08); }
+
+/* Urgent */
+.result-urgent {
+  background: #FDF2F2;
+  border-left: 3px solid var(--health-low);
+  padding: 0.75rem 1rem;
+  margin-bottom: 1.25rem;
+  border-radius: 0 2px 2px 0;
+}
+
+.result-urgent p { color: #7F1D1D; }
+
+/* Bulk results */
+.bulk-results { margin-top: 2rem; }
+
+.bulk-header {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 1.3rem;
+  color: var(--forest);
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(44, 36, 22, 0.1);
+}
+
+.bulk-count {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  background: var(--cream);
+  border: 1.5px solid var(--olive);
+  padding: 0.15rem 0.5rem;
+  border-radius: 2px;
+  margin-right: 0.25rem;
+}
+
+.bulk-results .result-card { margin-top: 1rem; }
+
+/* Scan mode toggle */
+.scan-mode-toggle {
+  display: flex;
+  gap: 0;
+  margin-bottom: 1.5rem;
+  border: 1.5px solid rgba(44, 36, 22, 0.15);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.scan-mode-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--ink-faint);
+  background: white;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.scan-mode-btn + .scan-mode-btn {
+  border-left: 1.5px solid rgba(44, 36, 22, 0.15);
+}
+
+.scan-mode-btn:hover { color: var(--ink); background: var(--parchment); }
+
+.scan-mode-btn.active {
+  color: var(--cream);
+  background: var(--forest);
+}
+
+/* Assessment sub-scores in timeline */
+.assessment-subscores {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.subscore-mini {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.5rem;
+  background: var(--parchment);
+  border-radius: 2px;
+}
+
+.subscore-mini-label {
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.subscore-mini-val {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--forest);
+}
+
+.assessment-urgent {
+  background: #FDF2F2;
+  border-left: 3px solid var(--health-low);
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 1rem;
+  border-radius: 0 2px 2px 0;
+}
+
+.assessment-urgent p { color: #7F1D1D; font-size: 0.85rem; }
+
 /* ---- Error Card ---- */
 
 .error-card {
