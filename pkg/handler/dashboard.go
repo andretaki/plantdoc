@@ -4,7 +4,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/andre/plantdoc/internal/model"
+	"github.com/andre/plantdoc/pkg/model"
 )
 
 type PlantCard struct {

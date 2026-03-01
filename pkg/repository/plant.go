@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/andre/plantdoc/internal/database"
-	"github.com/andre/plantdoc/internal/model"
+	"github.com/andre/plantdoc/pkg/database"
+	"github.com/andre/plantdoc/pkg/model"
 )
 
 type PlantRepo struct {

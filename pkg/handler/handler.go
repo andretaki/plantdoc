@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/andre/plantdoc/internal/gemini"
-	"github.com/andre/plantdoc/internal/repository"
+	"github.com/andre/plantdoc/pkg/gemini"
+	"github.com/andre/plantdoc/pkg/repository"
 )
 
 type Handler struct {

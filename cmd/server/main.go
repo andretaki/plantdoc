@@ -6,10 +6,10 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/andre/plantdoc/internal/database"
-	"github.com/andre/plantdoc/internal/gemini"
-	"github.com/andre/plantdoc/internal/handler"
-	"github.com/andre/plantdoc/internal/repository"
+	"github.com/andre/plantdoc/pkg/database"
+	"github.com/andre/plantdoc/pkg/gemini"
+	"github.com/andre/plantdoc/pkg/handler"
+	"github.com/andre/plantdoc/pkg/repository"
 	"github.com/andre/plantdoc/templates"
 	"github.com/joho/godotenv"
 )

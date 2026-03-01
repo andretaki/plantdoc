@@ -7,10 +7,10 @@ import (
 	"os"
 	"sync"
 
-	"github.com/andre/plantdoc/internal/database"
-	"github.com/andre/plantdoc/internal/gemini"
-	apphandler "github.com/andre/plantdoc/internal/handler"
-	"github.com/andre/plantdoc/internal/repository"
+	"github.com/andre/plantdoc/pkg/database"
+	"github.com/andre/plantdoc/pkg/gemini"
+	apphandler "github.com/andre/plantdoc/pkg/handler"
+	"github.com/andre/plantdoc/pkg/repository"
 	"github.com/andre/plantdoc/templates"
 )
 
