@@ -1,7 +1,7 @@
 {{define "plant-card"}}
 <a href="/plants/{{.Plant.ID}}" class="plant-card fade-in">
-    {{if .LatestPhoto}}
-    <img src="/uploads/{{.LatestPhoto}}" alt="{{.Plant.Name}}" class="plant-card-img">
+    {{if .LatestPhotoID}}
+    <img src="/photos/{{.LatestPhotoID}}" alt="{{.Plant.Name}}" class="plant-card-img">
     {{else}}
     <div class="plant-card-placeholder">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">

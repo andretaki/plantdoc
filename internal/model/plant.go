@@ -14,6 +14,8 @@ type Assessment struct {
 	ID          int
 	PlantID     int
 	PhotoPath   string
+	PhotoData   []byte
+	PhotoMime   string
 	HealthScore int
 	Diagnosis   string
 	CareTips    string

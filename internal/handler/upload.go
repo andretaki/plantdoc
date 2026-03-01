@@ -16,8 +16,19 @@ import (
 
 func (h *Handler) UploadForm(w http.ResponseWriter, r *http.Request) {
 	plants, _ := h.plants.List(r.Context())
+
+	var cards []PlantCard
+	for _, p := range plants {
+		card := PlantCard{Plant: p}
+		if latest, err := h.assess.GetLatestByPlant(r.Context(), p.ID); err == nil {
+			card.LatestPhoto = latest.PhotoPath
+			card.HealthScore = latest.HealthScore
+		}
+		cards = append(cards, card)
+	}
+
 	h.renderPage(w, "upload.html", map[string]any{
-		"Plants": plants,
+		"Plants": cards,
 	})
 }
 
@@ -35,9 +46,18 @@ func (h *Handler) PlantUploadForm(w http.ResponseWriter, r *http.Request) {
 	}
 
 	plants, _ := h.plants.List(r.Context())
+	var cards []PlantCard
+	for _, p := range plants {
+		card := PlantCard{Plant: p}
+		if latest, err := h.assess.GetLatestByPlant(r.Context(), p.ID); err == nil {
+			card.LatestPhoto = latest.PhotoPath
+			card.HealthScore = latest.HealthScore
+		}
+		cards = append(cards, card)
+	}
 
 	h.renderPage(w, "upload.html", map[string]any{
-		"Plants":        plants,
+		"Plants":        cards,
 		"SelectedPlant": plant,
 	})
 }
@@ -55,7 +75,6 @@ func (h *Handler) UploadPhoto(w http.ResponseWriter, r *http.Request) {
 	}
 	defer file.Close()
 
-	// Read image data
 	imgData, err := io.ReadAll(file)
 	if err != nil {
 		log.Printf("reading file: %v", err)
@@ -63,22 +82,12 @@ func (h *Handler) UploadPhoto(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Save file to disk
+	// Save file to disk (local dev)
 	ext := filepath.Ext(header.Filename)
 	filename := fmt.Sprintf("%d-%s%s", time.Now().Unix(), uuid.New().String()[:8], ext)
-	savePath := filepath.Join(h.uploadDir, filename)
 
-	if err := os.MkdirAll(h.uploadDir, 0755); err != nil {
-		log.Printf("creating upload dir: %v", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
-
-	if err := os.WriteFile(savePath, imgData, 0644); err != nil {
-		log.Printf("writing file: %v", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
+	_ = os.MkdirAll(h.uploadDir, 0755)
+	_ = os.WriteFile(filepath.Join(h.uploadDir, filename), imgData, 0644)
 
 	// Detect MIME type
 	mimeType := http.DetectContentType(imgData)
@@ -123,9 +132,16 @@ func (h *Handler) UploadPhoto(w http.ResponseWriter, r *http.Request) {
 		plantID = plant.ID
 	}
 
-	_, err = h.assess.Create(r.Context(), plantID, filename, result.HealthScore, result.Diagnosis, result.CareTips)
+	// Store photo data in DB (for Vercel/serverless) and on disk (for local)
+	assess, err := h.assess.Create(r.Context(), plantID, filename, imgData, mimeType, result.HealthScore, result.Diagnosis, result.CareTips)
 	if err != nil {
 		log.Printf("creating assessment: %v", err)
+	}
+
+	// Photo URL: use /photos/{id} for DB-backed serving
+	photoURL := fmt.Sprintf("/uploads/%s", filename)
+	if assess != nil {
+		photoURL = fmt.Sprintf("/photos/%d", assess.ID)
 	}
 
 	// Return HTMX partial with results
@@ -155,4 +171,6 @@ func (h *Handler) UploadPhoto(w http.ResponseWriter, r *http.Request) {
 		html.EscapeString(result.Diagnosis),
 		html.EscapeString(result.CareTips),
 		plantID)
+
+	_ = photoURL // used in templates via /photos/{id}
 }

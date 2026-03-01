@@ -1,27 +1,25 @@
-package main
+package api
 
 import (
 	"context"
 	"log"
 	"net/http"
 	"os"
+	"sync"
 
 	"github.com/andre/plantdoc/internal/database"
 	"github.com/andre/plantdoc/internal/gemini"
 	"github.com/andre/plantdoc/internal/handler"
 	"github.com/andre/plantdoc/internal/repository"
 	"github.com/andre/plantdoc/templates"
-	"github.com/joho/godotenv"
 )
 
-func main() {
-	_ = godotenv.Load()
+var (
+	mux  *http.ServeMux
+	once sync.Once
+)
 
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
-	}
-
+func setup() {
 	dbURL := os.Getenv("DATABASE_URL")
 	if dbURL == "" {
 		log.Fatal("DATABASE_URL is required")
@@ -32,33 +30,28 @@ func main() {
 		log.Fatal("GEMINI_API_KEY is required")
 	}
 
-	uploadDir := os.Getenv("UPLOAD_DIR")
-	if uploadDir == "" {
-		uploadDir = "uploads"
-	}
-
 	ctx := context.Background()
 
 	db, err := database.Connect(ctx, dbURL)
 	if err != nil {
 		log.Fatalf("database connection: %v", err)
 	}
-	defer db.Close()
 
 	if err := db.Migrate(ctx); err != nil {
 		log.Fatalf("database migration: %v", err)
 	}
-	log.Println("Database migrated successfully")
 
 	plantRepo := repository.NewPlantRepo(db)
 	assessRepo := repository.NewAssessmentRepo(db)
 	geminiClient := gemini.NewClient(geminiKey)
 
-	h := handler.New(plantRepo, assessRepo, geminiClient, templates.FS(), uploadDir)
+	h := handler.New(plantRepo, assessRepo, geminiClient, templates.FS(), "/tmp/uploads")
 
-	mux := http.NewServeMux()
+	mux = http.NewServeMux()
 	h.Routes(mux)
+}
 
-	log.Printf("PlantDoc running at http://localhost:%s", port)
-	log.Fatal(http.ListenAndServe(":"+port, mux))
+func Handler(w http.ResponseWriter, r *http.Request) {
+	once.Do(setup)
+	mux.ServeHTTP(w, r)
 }

@@ -8,9 +8,10 @@ import (
 )
 
 type PlantCard struct {
-	Plant       model.Plant
-	LatestPhoto string
-	HealthScore int
+	Plant           model.Plant
+	LatestPhoto     string
+	LatestPhotoID   int
+	HealthScore     int
 }
 
 func (h *Handler) Dashboard(w http.ResponseWriter, r *http.Request) {
@@ -26,6 +27,7 @@ func (h *Handler) Dashboard(w http.ResponseWriter, r *http.Request) {
 		card := PlantCard{Plant: p}
 		if latest, err := h.assess.GetLatestByPlant(r.Context(), p.ID); err == nil {
 			card.LatestPhoto = latest.PhotoPath
+			card.LatestPhotoID = latest.ID
 			card.HealthScore = latest.HealthScore
 		}
 		cards = append(cards, card)

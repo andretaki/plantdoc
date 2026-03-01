@@ -16,13 +16,13 @@ func NewAssessmentRepo(db *database.DB) *AssessmentRepo {
 	return &AssessmentRepo{db: db}
 }
 
-func (r *AssessmentRepo) Create(ctx context.Context, plantID int, photoPath string, healthScore int, diagnosis, careTips string) (*model.Assessment, error) {
+func (r *AssessmentRepo) Create(ctx context.Context, plantID int, photoPath string, photoData []byte, photoMime string, healthScore int, diagnosis, careTips string) (*model.Assessment, error) {
 	var a model.Assessment
 	err := r.db.Pool.QueryRow(ctx,
-		`INSERT INTO assessments (plant_id, photo_path, health_score, diagnosis, care_tips)
-		 VALUES ($1, $2, $3, $4, $5)
+		`INSERT INTO assessments (plant_id, photo_path, photo_data, photo_mime, health_score, diagnosis, care_tips)
+		 VALUES ($1, $2, $3, $4, $5, $6, $7)
 		 RETURNING id, plant_id, photo_path, health_score, diagnosis, care_tips, created_at`,
-		plantID, photoPath, healthScore, diagnosis, careTips,
+		plantID, photoPath, photoData, photoMime, healthScore, diagnosis, careTips,
 	).Scan(&a.ID, &a.PlantID, &a.PhotoPath, &a.HealthScore, &a.Diagnosis, &a.CareTips, &a.CreatedAt)
 	if err != nil {
 		return nil, fmt.Errorf("creating assessment: %w", err)
@@ -60,4 +60,16 @@ func (r *AssessmentRepo) GetLatestByPlant(ctx context.Context, plantID int) (*mo
 		return nil, fmt.Errorf("getting latest assessment for plant %d: %w", plantID, err)
 	}
 	return &a, nil
+}
+
+func (r *AssessmentRepo) GetPhotoData(ctx context.Context, id int) ([]byte, string, error) {
+	var data []byte
+	var mime string
+	err := r.db.Pool.QueryRow(ctx,
+		`SELECT photo_data, photo_mime FROM assessments WHERE id = $1`, id,
+	).Scan(&data, &mime)
+	if err != nil {
+		return nil, "", fmt.Errorf("getting photo data for assessment %d: %w", id, err)
+	}
+	return data, mime, nil
 }
