@@ -9,7 +9,7 @@ import (
 
 	"github.com/andre/plantdoc/internal/database"
 	"github.com/andre/plantdoc/internal/gemini"
-	"github.com/andre/plantdoc/internal/handler"
+	apphandler "github.com/andre/plantdoc/internal/handler"
 	"github.com/andre/plantdoc/internal/repository"
 	"github.com/andre/plantdoc/templates"
 )
@@ -45,7 +45,7 @@ func setup() {
 	assessRepo := repository.NewAssessmentRepo(db)
 	geminiClient := gemini.NewClient(geminiKey)
 
-	h := handler.New(plantRepo, assessRepo, geminiClient, templates.FS(), "/tmp/uploads")
+	h := apphandler.New(plantRepo, assessRepo, geminiClient, templates.FS(), "/tmp/uploads")
 
 	mux = http.NewServeMux()
 	h.Routes(mux)
