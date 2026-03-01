@@ -58,13 +58,25 @@ func (db *DB) Migrate(ctx context.Context) error {
 			END IF;
 		EXCEPTION WHEN OTHERS THEN NULL;
 		END $$`,
-		`UPDATE plants
-		 SET profile_id = (
-		 	SELECT id FROM profiles ORDER BY id ASC LIMIT 1
-		 )
-		 WHERE profile_id IS NULL`,
 		`DO $$ BEGIN
-			ALTER TABLE plants ALTER COLUMN profile_id SET NOT NULL;
+			IF EXISTS (
+				SELECT 1
+				FROM information_schema.columns
+				WHERE table_schema = 'public'
+				  AND table_name = 'plants'
+				  AND column_name = 'profile_id'
+			) THEN
+				UPDATE plants
+				SET profile_id = (
+					SELECT id FROM profiles ORDER BY id ASC LIMIT 1
+				)
+				WHERE profile_id IS NULL;
+
+				BEGIN
+					ALTER TABLE plants ALTER COLUMN profile_id SET NOT NULL;
+				EXCEPTION WHEN OTHERS THEN NULL;
+				END;
+			END IF;
 		EXCEPTION WHEN OTHERS THEN NULL;
 		END $$`,
 		`DO $$ BEGIN
