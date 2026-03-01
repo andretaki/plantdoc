@@ -1,3 +1,5 @@
 .env
 uploads/
 tmp/
+.claude-transcripts/
+.vercel

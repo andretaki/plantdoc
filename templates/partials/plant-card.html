@@ -1,22 +1,27 @@
 {{define "plant-card"}}
-<a href="/plants/{{.Plant.ID}}" class="block bg-white rounded-xl shadow hover:shadow-lg transition-shadow overflow-hidden">
+<a href="/plants/{{.Plant.ID}}" class="plant-card fade-in">
     {{if .LatestPhoto}}
-    <img src="/uploads/{{.LatestPhoto}}" alt="{{.Plant.Name}}" class="w-full h-48 object-cover">
+    <img src="/uploads/{{.LatestPhoto}}" alt="{{.Plant.Name}}" class="plant-card-img">
     {{else}}
-    <div class="w-full h-48 bg-green-50 flex items-center justify-center text-4xl">&#127793;</div>
+    <div class="plant-card-placeholder">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M12 22V8M12 8C12 8 7 3 3 6C-1 9 4 14 12 8ZM12 8C12 8 17 3 21 6C25 9 20 14 12 8Z"/>
+            <path d="M8 22h8" stroke-linecap="round"/>
+        </svg>
+    </div>
     {{end}}
-    <div class="p-4">
-        <h3 class="font-semibold text-lg text-gray-800">{{.Plant.Name}}</h3>
+    <div class="plant-card-body">
+        <div class="plant-card-name">{{.Plant.Name}}</div>
         {{if .Plant.CommonName}}
-        <p class="text-sm text-gray-500">{{.Plant.CommonName}}</p>
+        <div class="plant-card-species">{{.Plant.CommonName}}</div>
         {{end}}
         {{if .HealthScore}}
-        <div class="mt-2 flex items-center gap-2">
-            <span class="text-sm font-medium text-gray-600">Health:</span>
-            <div class="flex-1 bg-gray-200 rounded-full h-2">
-                <div class="bg-green-500 h-2 rounded-full" style="width: {{mul .HealthScore 10}}%"></div>
+        <div class="health-bar-wrap">
+            <span class="health-bar-label">Health</span>
+            <div class="health-bar">
+                <div class="health-bar-fill" data-score="{{.HealthScore}}" style="width: {{mul .HealthScore 10}}%"></div>
             </div>
-            <span class="text-sm font-bold text-gray-700">{{.HealthScore}}/10</span>
+            <span class="health-score">{{.HealthScore}}/10</span>
         </div>
         {{end}}
     </div>

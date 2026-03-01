@@ -1,17 +1,30 @@
 {{define "assessment"}}
-<div class="bg-white rounded-xl shadow p-6 flex flex-col md:flex-row gap-6">
-    <img src="/uploads/{{.PhotoPath}}" alt="Plant photo" class="w-full md:w-40 h-40 object-cover rounded-lg flex-shrink-0">
-    <div class="flex-1">
-        <div class="flex justify-between items-start mb-3">
-            <span class="text-sm text-gray-400">{{.CreatedAt.Format "Jan 2, 2006 3:04 PM"}}</span>
-            <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-bold">
-                {{.HealthScore}}/10
-            </span>
+<div class="assessment-entry">
+    <div class="assessment-dot"></div>
+    <div class="assessment-card">
+        <div class="assessment-card-inner">
+            <img src="/uploads/{{.PhotoPath}}" alt="Plant observation" class="assessment-photo">
+            <div class="assessment-body">
+                <div class="assessment-meta">
+                    <span class="assessment-date">{{.CreatedAt.Format "2 Jan 2006, 3:04 PM"}}</span>
+                    {{if ge .HealthScore 7}}
+                    <span class="assessment-score score-high">{{.HealthScore}}/10</span>
+                    {{else if ge .HealthScore 4}}
+                    <span class="assessment-score score-mid">{{.HealthScore}}/10</span>
+                    {{else}}
+                    <span class="assessment-score score-low">{{.HealthScore}}/10</span>
+                    {{end}}
+                </div>
+                <div class="assessment-section">
+                    <div class="assessment-section-title">Diagnosis</div>
+                    <p>{{.Diagnosis}}</p>
+                </div>
+                <div class="assessment-section">
+                    <div class="assessment-section-title">Care Notes</div>
+                    <p>{{.CareTips}}</p>
+                </div>
+            </div>
         </div>
-        <h3 class="font-semibold text-gray-800 mb-1">Diagnosis</h3>
-        <p class="text-gray-600 text-sm mb-3">{{.Diagnosis}}</p>
-        <h3 class="font-semibold text-gray-800 mb-1">Care Tips</h3>
-        <p class="text-gray-600 text-sm">{{.CareTips}}</p>
     </div>
 </div>
 {{end}}

@@ -3,21 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PlantDoc - {{block "title" .}}Dashboard{{end}}</title>
+    <title>PlantDoc — {{block "title" .}}Dashboard{{end}}</title>
     <script src="https://unpkg.com/htmx.org@2.0.4"></script>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
     <link href="/static/style.css" rel="stylesheet">
 </head>
-<body class="bg-gray-50 min-h-screen">
-    <nav class="bg-green-700 text-white p-4 shadow-lg">
-        <div class="max-w-5xl mx-auto flex justify-between items-center">
-            <a href="/" class="text-2xl font-bold tracking-tight">PlantDoc</a>
-            <a href="/upload" class="bg-green-500 hover:bg-green-400 px-4 py-2 rounded-lg font-medium transition-colors">
-                + New Scan
+<body>
+    <nav class="nav">
+        <div class="nav-inner">
+            <a href="/" class="nav-brand">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M12 22V8M12 8C12 8 7 3 3 6C-1 9 4 14 12 8ZM12 8C12 8 17 3 21 6C25 9 20 14 12 8Z"/>
+                    <path d="M8 22h8" stroke-linecap="round"/>
+                </svg>
+                PlantDoc
             </a>
+            <a href="/upload" class="nav-btn">+ New Scan</a>
         </div>
     </nav>
-    <main class="max-w-5xl mx-auto p-6">
+    <main class="main">
         {{block "content" .}}{{end}}
     </main>
 </body>

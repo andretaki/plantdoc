@@ -98,9 +98,7 @@ func (h *Handler) UploadPhoto(w http.ResponseWriter, r *http.Request) {
 	result, err := h.gemini.AnalyzePlant(r.Context(), imgData, mimeType, previousDiag)
 	if err != nil {
 		log.Printf("Gemini analysis: %v", err)
-		fmt.Fprintf(w, `<div class="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
-			Analysis failed: %s. Your photo was saved - try again later.
-		</div>`, html.EscapeString(err.Error()))
+		fmt.Fprintf(w, `<div class="error-card">Analysis failed: %s. Your photo was saved — try again later.</div>`, html.EscapeString(err.Error()))
 		return
 	}
 
@@ -131,26 +129,25 @@ func (h *Handler) UploadPhoto(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Return HTMX partial with results
-	fmt.Fprintf(w, `<div class="bg-green-50 border border-green-200 rounded-xl p-6 space-y-4">
-		<div class="flex items-center gap-3">
-			<span class="text-3xl">&#127793;</span>
-			<div>
-				<h2 class="text-xl font-bold text-green-800">%s</h2>
-				<p class="text-green-600 italic">%s</p>
+	fmt.Fprintf(w, `<div class="result-card">
+		<div class="result-header">
+			<div class="result-names">
+				<div class="result-common">%s</div>
+				<div class="result-species">%s</div>
 			</div>
-			<span class="ml-auto bg-green-200 text-green-900 px-4 py-2 rounded-full text-lg font-bold">%d/10</span>
+			<div class="result-score">%d/10</div>
 		</div>
-		<div>
-			<h3 class="font-semibold text-gray-800">Diagnosis</h3>
-			<p class="text-gray-600">%s</p>
+		<div class="result-section">
+			<div class="result-section-title">Diagnosis</div>
+			<p>%s</p>
 		</div>
-		<div>
-			<h3 class="font-semibold text-gray-800">Care Tips</h3>
-			<p class="text-gray-600">%s</p>
+		<div class="result-section">
+			<div class="result-section-title">Care Notes</div>
+			<p>%s</p>
 		</div>
-		<a href="/plants/%d" class="inline-block bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-lg">
-			View Plant Journal &rarr;
-		</a>
+		<div class="result-action">
+			<a href="/plants/%d" class="btn-primary">View Plant Journal &rarr;</a>
+		</div>
 	</div>`,
 		html.EscapeString(result.CommonName),
 		html.EscapeString(result.Species),

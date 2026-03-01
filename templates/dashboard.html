@@ -1,26 +1,27 @@
 {{define "title"}}Dashboard{{end}}
 {{define "content"}}
-<div class="mb-8">
-    <h1 class="text-3xl font-bold text-gray-800 mb-2">Your Plants</h1>
+<div class="page-header fade-in">
+    <h1>Your Collection</h1>
     {{with .Plants}}
-    <p class="text-gray-500">{{len .}} plant{{if ne (len .) 1}}s{{end}} in your collection</p>
+    <p class="subtitle">{{len .}} specimen{{if ne (len .) 1}}s{{end}} under observation</p>
     {{end}}
 </div>
 
 {{if .Plants}}
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+<div class="plant-grid">
     {{range .Plants}}
     {{template "plant-card" .}}
     {{end}}
 </div>
 {{else}}
-<div class="text-center py-20">
-    <p class="text-6xl mb-4">&#127793;</p>
-    <h2 class="text-xl font-semibold text-gray-600 mb-2">No plants yet</h2>
-    <p class="text-gray-400 mb-6">Upload your first plant photo to get started</p>
-    <a href="/upload" class="bg-green-600 hover:bg-green-500 text-white px-6 py-3 rounded-lg font-medium transition-colors">
-        Scan Your First Plant
-    </a>
+<div class="empty-state fade-in">
+    <svg class="empty-state-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M12 22V8M12 8C12 8 7 3 3 6C-1 9 4 14 12 8ZM12 8C12 8 17 3 21 6C25 9 20 14 12 8Z"/>
+        <path d="M8 22h8" stroke-linecap="round"/>
+    </svg>
+    <h2>Begin your botanical journal</h2>
+    <p>Upload a photograph of your plant. We'll identify the species, assess its health, and begin tracking its progress over time.</p>
+    <a href="/upload" class="btn-primary">Scan Your First Plant</a>
 </div>
 {{end}}
 {{end}}
