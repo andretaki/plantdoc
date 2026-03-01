@@ -1,0 +1,17 @@
+{{define "assessment"}}
+<div class="bg-white rounded-xl shadow p-6 flex flex-col md:flex-row gap-6">
+    <img src="/uploads/{{.PhotoPath}}" alt="Plant photo" class="w-full md:w-40 h-40 object-cover rounded-lg flex-shrink-0">
+    <div class="flex-1">
+        <div class="flex justify-between items-start mb-3">
+            <span class="text-sm text-gray-400">{{.CreatedAt.Format "Jan 2, 2006 3:04 PM"}}</span>
+            <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-bold">
+                {{.HealthScore}}/10
+            </span>
+        </div>
+        <h3 class="font-semibold text-gray-800 mb-1">Diagnosis</h3>
+        <p class="text-gray-600 text-sm mb-3">{{.Diagnosis}}</p>
+        <h3 class="font-semibold text-gray-800 mb-1">Care Tips</h3>
+        <p class="text-gray-600 text-sm">{{.CareTips}}</p>
+    </div>
+</div>
+{{end}}

@@ -1,0 +1,26 @@
+{{define "title"}}Dashboard{{end}}
+{{define "content"}}
+<div class="mb-8">
+    <h1 class="text-3xl font-bold text-gray-800 mb-2">Your Plants</h1>
+    {{with .Plants}}
+    <p class="text-gray-500">{{len .}} plant{{if ne (len .) 1}}s{{end}} in your collection</p>
+    {{end}}
+</div>
+
+{{if .Plants}}
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    {{range .Plants}}
+    {{template "plant-card" .}}
+    {{end}}
+</div>
+{{else}}
+<div class="text-center py-20">
+    <p class="text-6xl mb-4">&#127793;</p>
+    <h2 class="text-xl font-semibold text-gray-600 mb-2">No plants yet</h2>
+    <p class="text-gray-400 mb-6">Upload your first plant photo to get started</p>
+    <a href="/upload" class="bg-green-600 hover:bg-green-500 text-white px-6 py-3 rounded-lg font-medium transition-colors">
+        Scan Your First Plant
+    </a>
+</div>
+{{end}}
+{{end}}

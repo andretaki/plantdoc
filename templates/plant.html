@@ -1,0 +1,32 @@
+{{define "title"}}{{.Plant.Name}}{{end}}
+{{define "content"}}
+<div class="mb-6">
+    <a href="/" class="text-green-600 hover:underline">&larr; Back to dashboard</a>
+</div>
+
+<div class="flex justify-between items-start mb-8">
+    <div>
+        <h1 class="text-3xl font-bold text-gray-800">{{.Plant.Name}}</h1>
+        {{if .Plant.Species}}
+        <p class="text-gray-500 italic">{{.Plant.Species}}{{if .Plant.CommonName}} ({{.Plant.CommonName}}){{end}}</p>
+        {{end}}
+        <p class="text-gray-400 text-sm mt-1">Added {{.Plant.CreatedAt.Format "January 2, 2006"}}</p>
+    </div>
+    <a href="/plants/{{.Plant.ID}}/upload"
+       class="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-lg transition-colors">
+        + New Photo
+    </a>
+</div>
+
+{{if .Assessments}}
+<div class="space-y-6">
+    {{range .Assessments}}
+    {{template "assessment" .}}
+    {{end}}
+</div>
+{{else}}
+<div class="text-center py-12 text-gray-400">
+    <p>No assessments yet. Upload a photo to get started.</p>
+</div>
+{{end}}
+{{end}}
