@@ -1,4 +1,9 @@
 {
+  "build": {
+    "env": {
+      "GO_BUILD_FLAGS": "-v"
+    }
+  },
   "rewrites": [
     { "source": "/style.css", "destination": "/style.css" },
     { "source": "/(.*)", "destination": "/api" }
