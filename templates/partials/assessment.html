@@ -7,15 +7,20 @@
             <div class="assessment-body">
                 <div class="assessment-meta">
                     <span class="assessment-date">{{.CreatedAt.Format "2 Jan 2006, 3:04 PM"}}</span>
-                    {{if ge .HealthScore 7}}
-                    <span class="assessment-score score-high">{{.HealthScore}}/10</span>
-                    {{else if ge .HealthScore 4}}
-                    <span class="assessment-score score-mid">{{.HealthScore}}/10</span>
-                    {{else}}
-                    <span class="assessment-score score-low">{{.HealthScore}}/10</span>
-                    {{end}}
+                    <div class="assessment-meta-right">
+                        {{if .Confidence}}
+                        <span class="assessment-confidence confidence-{{.Confidence}}">{{.Confidence}} confidence</span>
+                        {{end}}
+                        {{if ge .HealthScore 7}}
+                        <span class="assessment-score score-high">{{.HealthScore}}/10</span>
+                        {{else if ge .HealthScore 4}}
+                        <span class="assessment-score score-mid">{{.HealthScore}}/10</span>
+                        {{else}}
+                        <span class="assessment-score score-low">{{.HealthScore}}/10</span>
+                        {{end}}
+                    </div>
                 </div>
-                {{if .Foliage}}
+                {{if or .Foliage .Hydration .PestRisk .Vitality}}
                 <div class="assessment-subscores">
                     <div class="subscore-mini"><span class="subscore-mini-label">Foliage</span><span class="subscore-mini-val">{{.Foliage}}</span></div>
                     <div class="subscore-mini"><span class="subscore-mini-label">Hydration</span><span class="subscore-mini-val">{{.Hydration}}</span></div>
@@ -25,7 +30,7 @@
                 {{end}}
                 {{if .Urgent}}
                 <div class="assessment-urgent">
-                    <div class="assessment-section-title" style="color: var(--health-low);">Urgent</div>
+                    <div class="assessment-section-title">Urgent</div>
                     <p>{{.Urgent}}</p>
                 </div>
                 {{end}}

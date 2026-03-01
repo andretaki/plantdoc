@@ -9,6 +9,7 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"time"
 )
 
 type Client struct {
@@ -17,15 +18,15 @@ type Client struct {
 }
 
 type AnalysisResult struct {
-	Species        string         `json:"species"`
-	CommonName     string         `json:"common_name"`
-	HealthScore    int            `json:"health_score"`
-	Confidence     string         `json:"confidence"`
-	Diagnosis      string         `json:"diagnosis"`
-	CareTips       string         `json:"care_tips"`
-	SubScores      SubScores      `json:"sub_scores"`
-	Urgent         string         `json:"urgent,omitempty"`
-	SeasonalAdvice string         `json:"seasonal_advice,omitempty"`
+	Species        string    `json:"species"`
+	CommonName     string    `json:"common_name"`
+	HealthScore    int       `json:"health_score"`
+	Confidence     string    `json:"confidence"`
+	Diagnosis      string    `json:"diagnosis"`
+	CareTips       string    `json:"care_tips"`
+	SubScores      SubScores `json:"sub_scores"`
+	Urgent         string    `json:"urgent,omitempty"`
+	SeasonalAdvice string    `json:"seasonal_advice,omitempty"`
 }
 
 type SubScores struct {
@@ -43,11 +44,11 @@ type BulkResult struct {
 func NewClient(apiKey string) *Client {
 	return &Client{
 		apiKey:     apiKey,
-		httpClient: &http.Client{},
+		httpClient: &http.Client{Timeout: 45 * time.Second},
 	}
 }
 
-const singlePlantPrompt = `You are a world-class botanist and plant pathologist with 30 years of field experience. Analyze this plant photograph with the precision and depth of a professional consultation.
+const singlePlantPromptTemplate = `You are a world-class botanist and plant pathologist with 30 years of field experience. Analyze this plant photograph with the precision and depth of a professional consultation.
 
 IDENTIFICATION: Examine leaf morphology, venation patterns, growth habit, stem characteristics, and any visible reproductive structures. Provide your best identification with a confidence qualifier.
 
@@ -63,7 +64,7 @@ CARE TIPS: Prescribe specific interventions. Include exact measurements when rel
 
 URGENT: If the plant faces imminent death or rapid decline, flag it here. Otherwise omit this field.
 
-SEASONAL: Note any time-sensitive care adjustments for the current season (March, early spring in Northern Hemisphere).
+SEASONAL: Note any time-sensitive care adjustments for the current season context: %s.
 
 Respond ONLY with valid JSON, no markdown, no code fences:
 {
@@ -83,9 +84,10 @@ Respond ONLY with valid JSON, no markdown, no code fences:
   "seasonal_advice": "Spring-specific guidance for this species."
 }`
 
-const bulkPlantPrompt = `You are a world-class botanist. This photograph contains MULTIPLE plants. Identify and analyze EACH plant separately.
+const bulkPlantPromptTemplate = `You are a world-class botanist. This photograph contains MULTIPLE plants. Identify and analyze EACH plant separately.
 
 For each plant, examine leaf morphology, health indicators, and provide a professional-grade assessment.
+Align seasonal recommendations to this context: %s.
 
 Score each dimension 1-10 (10 = perfect):
 - foliage: Leaf color, turgor, margins, chlorosis/necrosis
@@ -118,7 +120,7 @@ Respond ONLY with valid JSON, no markdown, no code fences:
 List every distinct plant species visible. If the same species appears in multiple pots, still list each separately with its own health assessment based on its individual condition.`
 
 func (c *Client) AnalyzePlant(ctx context.Context, imageData []byte, mimeType string, previousDiagnosis *string) (*AnalysisResult, error) {
-	prompt := singlePlantPrompt
+	prompt := fmt.Sprintf(singlePlantPromptTemplate, seasonalContext(time.Now()))
 
 	if previousDiagnosis != nil {
 		prompt += fmt.Sprintf("\n\nPREVIOUS ASSESSMENT for longitudinal comparison:\n%s\n\nCompare current state to previous. Note improvements, decline, or stasis in each dimension. Reference specific changes.", *previousDiagnosis)
@@ -138,7 +140,7 @@ func (c *Client) AnalyzePlant(ctx context.Context, imageData []byte, mimeType st
 }
 
 func (c *Client) AnalyzeBulk(ctx context.Context, imageData []byte, mimeType string) (*BulkResult, error) {
-	text, err := c.callGemini(ctx, imageData, mimeType, bulkPlantPrompt)
+	text, err := c.callGemini(ctx, imageData, mimeType, fmt.Sprintf(bulkPlantPromptTemplate, seasonalContext(time.Now())))
 	if err != nil {
 		return nil, err
 	}
@@ -220,11 +222,50 @@ func (c *Client) callGemini(ctx context.Context, imageData []byte, mimeType stri
 	}
 
 	text := geminiResp.Candidates[0].Content.Parts[0].Text
-	text = strings.TrimSpace(text)
-	text = strings.TrimPrefix(text, "```json")
-	text = strings.TrimPrefix(text, "```")
-	text = strings.TrimSuffix(text, "```")
-	text = strings.TrimSpace(text)
+	jsonText, err := extractJSONPayload(text)
+	if err != nil {
+		preview := strings.TrimSpace(text)
+		if len(preview) > 350 {
+			preview = preview[:350] + "..."
+		}
+		return "", fmt.Errorf("invalid JSON payload from Gemini: %w (preview: %s)", err, preview)
+	}
 
-	return text, nil
+	return jsonText, nil
+}
+
+func seasonalContext(now time.Time) string {
+	season := "winter"
+	switch now.Month() {
+	case time.March, time.April, time.May:
+		season = "spring"
+	case time.June, time.July, time.August:
+		season = "summer"
+	case time.September, time.October, time.November:
+		season = "autumn"
+	}
+	return fmt.Sprintf("%s (%s in Northern Hemisphere)", now.Format("January 2006"), season)
+}
+
+func extractJSONPayload(text string) (string, error) {
+	clean := strings.TrimSpace(text)
+	clean = strings.TrimPrefix(clean, "```json")
+	clean = strings.TrimPrefix(clean, "```")
+	clean = strings.TrimSuffix(clean, "```")
+	clean = strings.TrimSpace(clean)
+
+	if json.Valid([]byte(clean)) {
+		return clean, nil
+	}
+
+	start := strings.IndexByte(clean, '{')
+	end := strings.LastIndexByte(clean, '}')
+	if start >= 0 && end > start {
+		candidate := strings.TrimSpace(clean[start : end+1])
+		if json.Valid([]byte(candidate)) {
+			return candidate, nil
+		}
+	}
+
+	return "", fmt.Errorf("no valid JSON object found")
 }

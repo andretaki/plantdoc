@@ -12,13 +12,13 @@
         <!-- Scan Mode Toggle -->
         <div class="scan-mode-toggle">
             <input type="hidden" name="scan_mode" id="scan_mode" value="single">
-            <button type="button" class="scan-mode-btn active" data-mode="single" onclick="setScanMode('single')">
+            <button type="button" class="scan-mode-btn active" data-mode="single" aria-pressed="true">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M12 22V8M12 8C12 8 7 3 3 6C-1 9 4 14 12 8ZM12 8C12 8 17 3 21 6C25 9 20 14 12 8Z"/>
                 </svg>
                 Single Plant
             </button>
-            <button type="button" class="scan-mode-btn" data-mode="bulk" onclick="setScanMode('bulk')">
+            <button type="button" class="scan-mode-btn" data-mode="bulk" aria-pressed="false">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M7 20V10M7 10C7 10 4 7 2 8.5S4 13 7 10Z"/>
                     <path d="M7 10C7 10 10 7 12 8.5S10 13 7 10Z"/>
@@ -38,7 +38,7 @@
                 <path d="M21 15l-5-5L5 21"/>
             </svg>
             <p class="drop-zone-text" id="drop-text">Drop a plant photograph here, or click to browse</p>
-            <p class="drop-zone-hint">JPG or PNG, up to 10 MB</p>
+            <p class="drop-zone-hint">JPG, PNG, or WebP, up to 10 MB</p>
             <input type="file" name="photo" accept="image/*" required onchange="previewImage(this)">
             <img id="preview" class="drop-zone-preview" alt="Preview">
         </div>
@@ -70,7 +70,7 @@
 
     <div id="loading" class="htmx-indicator loading-indicator">
         <div class="loading-spinner"></div>
-        <p class="loading-text" id="loading-text">Consulting the botanical oracle...</p>
+        <p class="loading-text" id="loading-text" aria-live="polite">Consulting the botanical oracle...</p>
     </div>
 
     <div id="result"></div>
@@ -90,26 +90,47 @@ function previewImage(input) {
 }
 
 function setScanMode(mode) {
-    document.getElementById('scan_mode').value = mode;
-    document.querySelectorAll('.scan-mode-btn').forEach(b => b.classList.remove('active'));
-    document.querySelector('[data-mode="'+mode+'"]').classList.add('active');
+    mode = mode === 'bulk' ? 'bulk' : 'single';
+    const scanModeInput = document.getElementById('scan_mode');
+    if (scanModeInput) {
+        scanModeInput.value = mode;
+    }
+
+    document.querySelectorAll('.scan-mode-btn').forEach(button => {
+        const isActive = button.dataset.mode === mode;
+        button.classList.toggle('active', isActive);
+        button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+    });
 
     const singleFields = document.getElementById('single-fields');
     const dropText = document.getElementById('drop-text');
     const submitBtn = document.getElementById('submit-btn');
     const loadingText = document.getElementById('loading-text');
+    const singleInputs = singleFields ? singleFields.querySelectorAll('input, select, textarea') : [];
 
     if (mode === 'bulk') {
-        singleFields.style.display = 'none';
+        if (singleFields) {
+            singleFields.hidden = true;
+            singleInputs.forEach(input => { input.disabled = true; });
+        }
         dropText.textContent = 'Drop a photo showing multiple plants';
         submitBtn.textContent = 'Scan All Plants';
         loadingText.textContent = 'Identifying each plant in the photograph...';
     } else {
-        singleFields.style.display = 'block';
+        if (singleFields) {
+            singleFields.hidden = false;
+            singleInputs.forEach(input => { input.disabled = false; });
+        }
         dropText.textContent = 'Drop a plant photograph here, or click to browse';
         submitBtn.textContent = 'Analyze Specimen';
         loadingText.textContent = 'Consulting the botanical oracle...';
     }
 }
+
+document.querySelectorAll('.scan-mode-btn').forEach(button => {
+    button.addEventListener('click', () => setScanMode(button.dataset.mode));
+});
+
+setScanMode(document.getElementById('scan_mode')?.value || 'single');
 </script>
 {{end}}
